@@ -20,8 +20,7 @@ from collections import namedtuple
 from isolation import Board
 from sample_players import (RandomPlayer, open_move_score,
                             improved_score, center_score)
-from game_agent import (MinimaxPlayer, AlphaBetaPlayer, custom_score,
-                        custom_score_2, custom_score_3)
+from game_agent import *
 
 NUM_MATCHES = 5  # number of matches against each opponent
 TIME_LIMIT = 150  # number of milliseconds before timeout
@@ -130,9 +129,11 @@ def main():
     # starting position against the same adversaries in the tournament
     test_agents = [
         Agent(AlphaBetaPlayer(score_fn=improved_score), "AB_Improved"),
-        Agent(AlphaBetaPlayer(score_fn=custom_score), "AB_Custom"),
-        Agent(AlphaBetaPlayer(score_fn=custom_score_2), "AB_Custom_2"),
-        Agent(AlphaBetaPlayer(score_fn=custom_score_3), "AB_Custom_3")
+        #Agent(AlphaBetaPlayer(score_fn=custom_score), "AB_Custom"),
+        #Agent(AlphaBetaPlayer(score_fn=custom_score_2), "AB_Custom_2"),
+        #Agent(AlphaBetaPlayer(score_fn=custom_score), "Custom Score"),
+        Agent(AlphaBetaPlayer(score_fn=look_ahead), "look_ahead")
+        
     ]
 
     # Define a collection of agents to compete against the test agents
@@ -144,6 +145,7 @@ def main():
         Agent(AlphaBetaPlayer(score_fn=open_move_score), "AB_Open"),
         Agent(AlphaBetaPlayer(score_fn=center_score), "AB_Center"),
         Agent(AlphaBetaPlayer(score_fn=improved_score), "AB_Improved")
+        
     ]
 
     print(DESCRIPTION)

@@ -261,7 +261,21 @@ class Board(object):
                        if self.move_is_legal((r + dr, c + dc))]
         random.shuffle(valid_moves)
         return valid_moves
+    
+    def get_moves(self, loc):
+        """Generate the list of possible moves for an L-shaped motion (like a
+        knight in chess).
+        """
+        if loc == Board.NOT_MOVED:
+            return self.get_blank_spaces()
 
+        r, c = loc
+        directions = [(-2, -1), (-2, 1), (-1, -2), (-1, 2),
+                      (1, -2), (1, 2), (2, -1), (2, 1)]
+        valid_moves = [(r + dr, c + dc) for dr, dc in directions
+                       if self.move_is_legal((r + dr, c + dc))]
+        random.shuffle(valid_moves)
+        return valid_moves
     def print_board(self):
         """DEPRECATED - use Board.to_string()"""
         return self.to_string()
