@@ -5,11 +5,10 @@ Created on Wed Jul 19 14:20:44 2017
 @author: shrr001
 """
 
-
 from random import randint
 import random
 from isolation import Board
-from game_agent import AlphaBetaPlayer, MinimaxPlayer, custom_score_2
+from game_agent import AlphaBetaPlayer, MinimaxPlayer, genetic
 import numpy as np
 import heapq
 import progressbar
@@ -17,14 +16,40 @@ from scipy import stats
 
 def individual(weight):
     # creates an individual 
-    return AlphaBetaPlayer(score_fn=custom_score_2, weight=weight)
+    return AlphaBetaPlayer(score_fn=genetic, weight=weight)
 
 def population(count):
     # creates a list of individuals 
     return [ individual(random.uniform(0,1)) for x in range(count) ]
 
-
-
+def breed(mother, father):
+    if mother != father:   
+        if father.w > mother.w:
+            childWeight = random.uniform(mother.w*0.95, father.w*1.05)
+        else:
+            childWeight = random.uniform(father.w*0.95, mother.w*1.05)
+        if childWeight < 0:
+            childWeight = 0
+        if childWeight > 1:
+            childWeight = 1
+        child = individual(childWeight)
+        return child
+    else:
+        print('Cannot breed with itself: Error: Mother == Father')
+        
+def mutate_agent(agent):
+    if agent.w < 0.5:
+        newWeight = (1-agent.w) + random.uniform(-0.5, 0.1)
+    else:
+        newWeight = (1-agent.w) + random.uniform(-0.1, 0.5) 
+    if newWeight < 0:
+        newWeight = 0
+    if newWeight > 1:
+        newWeight = 1
+    mutated_agent = individual(newWeight)
+    return mutated_agent
+        
+        
 def evolve(pop, gamesFactor=2, retain=0.2, random_select=0.05, mutate=0.01):
     # Determine the parents to breed from the population
     agent_score = {}
@@ -53,7 +78,6 @@ def evolve(pop, gamesFactor=2, retain=0.2, random_select=0.05, mutate=0.01):
     bottom_performers = heapq.nsmallest(bottom_performers_size, agent_score, key=agent_score.get)
     parents = top_perfomers + random.sample(bottom_performers, rand_select_size)
     random.shuffle(parents)
-    
 
     # Create children
     numChildren = len(pop) - len(parents)
@@ -63,11 +87,7 @@ def evolve(pop, gamesFactor=2, retain=0.2, random_select=0.05, mutate=0.01):
         par = random.sample(parents, 2)
         father = par[0]
         mother = par[1] 
-        if father.w > mother.w:
-            childWeight = random.randrange(father.w*0.95, mother.w*1.05)
-        else:
-            childWeight = random.randrange(mother.w*0.95, father.w*1.05)
-        child = individual(childWeight)
+        child = breed(mother, father)
         children.append(child)
         
     new_pop = parents + children
@@ -77,12 +97,8 @@ def evolve(pop, gamesFactor=2, retain=0.2, random_select=0.05, mutate=0.01):
     for agent in new_pop:
         if mutate > random.uniform(0,1):
             print('Mutate')
-            newWeight = agent.w + random.uniform(-0.05,0.05)
-            if newWeight < 0:
-                newWeight = 0
-            if newWeight > 1:
-                newWeight = 1
-            mutated_pop.append(individual(newWeight))
+            mutated_agent = mutate_agent(agent)
+            mutated_pop.append(mutated_agent)
         else:
             mutated_pop.append(agent)
     return mutated_pop
@@ -91,13 +107,13 @@ def evolve(pop, gamesFactor=2, retain=0.2, random_select=0.05, mutate=0.01):
         
     
 if __name__ == "__main__":
-    pop_count = 30
-    evolution_cyles = 20
+    pop_count = 100
+    evolution_cyles = 12
     pop = population(pop_count)
     history = []
     for i in range(evolution_cyles):
         print(i)
-        pop = evolve(pop, gamesFactor=5, retain=0.2, random_select=0.05, mutate=0.03)
+        pop = evolve(pop, gamesFactor=10, retain=0.2, random_select=0.05, mutate=0.05)
         best_weights = [i.w for i in pop]
         print(stats.describe(best_weights))
         history.append(best_weights)

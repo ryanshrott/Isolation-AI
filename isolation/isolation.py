@@ -262,7 +262,7 @@ class Board(object):
         random.shuffle(valid_moves)
         return valid_moves
     
-    def get_moves(self, loc):
+    def get_the_moves(self, loc):
         """Generate the list of possible moves for an L-shaped motion (like a
         knight in chess).
         """

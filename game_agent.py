@@ -12,6 +12,15 @@ class SearchTimeout(Exception):
 
 
 def custom_score(game, player):
+    return corner_penalty(game, player)
+
+def custom_score_2(game, player):
+    return centre_pref(game, player)
+
+def custom_score_3(game, player):
+    return division(game, player)
+
+def genetic(game, player):
     """Calculate the heuristic value of a game state from the point of view
     of the given player.
 
@@ -42,10 +51,18 @@ def custom_score(game, player):
     if game.is_winner(player):
         return np.inf
     
+    # get current move count
+    move_count = game.move_count
+
+    # count number of moves available
     own_moves = len(game.get_legal_moves(player))
     opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
-    return float(own_moves - 3*opp_moves)
 
+    # calculate weight
+    w = 10 / (move_count + 1)
+
+    # return weighted delta of available moves
+    return float(own_moves - (w * opp_moves))
 
 def look_ahead(game, player):
     """Calculate the heuristic value of a game state from the point of view
@@ -86,12 +103,12 @@ def look_ahead(game, player):
     opp_moves_forecast = len(opp_legal_moves)
 
     for x,y in zip(own_legal_moves,opp_legal_moves):
-        own_moves_forecast += len(game.get_moves(x))
-        opp_moves_forecast += len(game.get_moves(y))
+        own_moves_forecast += len(game.get_the_moves(x))
+        opp_moves_forecast += len(game.get_the_moves(y))
 
     return float(own_moves_forecast - opp_moves_forecast)
 
-def corner(game, player):
+def corner_penalty(game, player):
     """Calculate the heuristic value of a game state from the point of view
     of the given player.
 
@@ -124,17 +141,16 @@ def corner(game, player):
     
     own_moves = len(game.get_legal_moves(player))
     opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
-    value = float(own_moves - 3*opp_moves)
+    value = float(own_moves - opp_moves)
     penalized_value = value - 2
     
     if game.get_player_location(player) in  [(0, 0), (0, game.height - 1), (game.width - 1, 0), (game.width - 1, game.height - 1)]: # in the corner so we should penalize 
-        #print('in corner')
         return penalized_value
     
     return value
 
 
-def custom_score_2(game, player):
+def centre_pref(game, player):
     """Calculate the heuristic value of a game state from the point of view
     of the given player.
 
@@ -208,7 +224,7 @@ def squared_difference(game, player):
     own_moves = len(game.get_legal_moves(player))
     opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
 
-    return float(own_moves**2 - (3*opp_moves)**2)
+    return float((own_moves)**2 - (opp_moves)**2)
 
 def division(game, player):
     """Calculate the heuristic value of a game state from the point of view
@@ -271,10 +287,9 @@ class IsolationPlayer:
         positive value large enough to allow the function to return before the
         timer expires.
     """
-    def __init__(self, weight = 3, search_depth=3, score_fn=custom_score, timeout=10.):
+    def __init__(self, search_depth=3, score_fn=custom_score, timeout=10.):
         self.search_depth = search_depth
         self.score = score_fn
-        self.w = weight
         self.time_left = None
         self.TIMER_THRESHOLD = timeout
         
